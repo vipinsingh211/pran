@@ -10,7 +10,7 @@
 -behaviour(gen_server).
 
 %% API
--export([open/2,
+-export([open/3,
 	 read/1,
 	 close/1]).
 
@@ -44,8 +44,8 @@
 %% Function: open() -> {ok,Pid} | ignore | {error,Error}
 %% Description: Starts the server
 %%--------------------------------------------------------------------
-open(File, Opts) ->
-    gen_server:start_link(?MODULE, [File,Opts], []).
+open(File, Type, Opts) ->
+    gen_server:start_link(?MODULE, [File, Type, Opts], []).
 
 read(Fd) ->
     gen_server:call(Fd,read).
