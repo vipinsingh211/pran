@@ -7,8 +7,6 @@
 %%%-------------------------------------------------------------------
 -module(pran).
 
--compile(export_all).
-
 %% API
 -export([open_file/2,
 	 read/1,
