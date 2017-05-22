@@ -7,10 +7,9 @@
 %%%-------------------------------------------------------------------
 -module(pran).
 
--compile(export_all).
-
 %% API
 -export([open_file/2,
+    open_file_from_ram/2,
 	 read/1,
 	 close/1,
 	 grep_file/2]).
@@ -31,7 +30,16 @@ open_file(File, Pat) when is_binary(Pat) ->
     open_file(File, {filters,[{pcap,{contain,CP}}]});
 open_file(File, Filter) when is_tuple(Filter) ->
     Opts = pran_utils:load_config(),
-    {ok,_FD}=pran_pcap_file:open(File, [Filter|Opts]).
+    {ok,_FD}=pran_pcap_file:open(File, disk, [Filter|Opts]).
+
+open_file_from_ram(File, Pat) when is_list(Pat) ->
+    open_file_from_ram(File, list_to_binary(Pat));
+open_file_from_ram(File, Pat) when is_binary(Pat) ->
+    CP = pran_utils:mk_pattern(Pat),
+    open_file_from_ram(File, {filters,[{pcap,{contain,CP}}]});
+open_file_from_ram(File, Filter) when is_tuple(Filter) ->
+    Opts = pran_utils:load_config(),
+    {ok,_FD}=pran_pcap_file:open(File, memory, [Filter|Opts]).
 
 read(FD) ->
     pran_pcap_file:read(FD).

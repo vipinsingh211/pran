@@ -10,7 +10,7 @@
 -behaviour(gen_server).
 
 %% API
--export([open/2,
+-export([open/3,
 	 read/1,
 	 close/1]).
 
@@ -44,8 +44,8 @@
 %% Function: open() -> {ok,Pid} | ignore | {error,Error}
 %% Description: Starts the server
 %%--------------------------------------------------------------------
-open(File, Opts) ->
-    gen_server:start_link(?MODULE, [File,Opts], []).
+open(File, Type, Opts) ->
+    gen_server:start_link(?MODULE, [File, Type, Opts], []).
 
 read(Fd) ->
     gen_server:call(Fd,read).
@@ -64,11 +64,19 @@ close(Fd) ->
 %%                         {stop, Reason}
 %% Description: Initiates the server
 %%--------------------------------------------------------------------
-init([File,Opts]) ->
+init([File, Type, Opts]) ->
     Decoders = proplists:get_value(decoders, Opts),
     Filters =  proplists:get_value(filters, Opts, []),
-    {ok, Fd} = file:open(File, [read, raw, binary]),
-    {ok, Bin} = file:pread(Fd, 0, ?BLOCKSIZE),
+    {Fd, Bin} = case Type of
+        disk ->
+            {ok, F} = file:open(File, [read, raw, binary]),
+            {ok, B} = file:pread(F, 0, ?BLOCKSIZE),
+            {F, B};
+        memory ->
+            {ok, F} = file:open(File, [ram, read, binary]),
+            {ok, B} = file:pread(F, 0, ?BLOCKSIZE),
+            {F, B}
+    end,
     case pran_pcap:file_header(Bin) of
 	{#file_hdr{order = Endian,
 		   major = _Major, minor = _Minor,
@@ -188,13 +196,13 @@ read_block(#state{fd=Fd, offset=Offset}=State) ->
 %%--------------------------------------------------------------------
 test_read_file(File) ->
     et:trace_me(80, test_read_frames,pcap_file,open,[]),
-    {ok,Pid} = open(File,[]),
+    {ok,Pid} = open(File, disk, []),
     F=read(Pid),
     test_read_frames(F,Pid).
 
-test_read_frames(eof,Pid) ->
+test_read_frames(eof,_Pid) ->
     ok;
-test_read_frames(F,Pid) ->
+test_read_frames(_F,Pid) ->
     et:trace_me(80, test_read_frames,pcap_file,read,[]),
     F1=read(Pid),
     test_read_frames(F1,Pid).
