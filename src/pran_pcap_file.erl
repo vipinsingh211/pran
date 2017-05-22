@@ -196,13 +196,13 @@ read_block(#state{fd=Fd, offset=Offset}=State) ->
 %%--------------------------------------------------------------------
 test_read_file(File) ->
     et:trace_me(80, test_read_frames,pcap_file,open,[]),
-    {ok,Pid} = open(File,[]),
+    {ok,Pid} = open(File, disk, []),
     F=read(Pid),
     test_read_frames(F,Pid).
 
-test_read_frames(eof,Pid) ->
+test_read_frames(eof,_Pid) ->
     ok;
-test_read_frames(F,Pid) ->
+test_read_frames(_F,Pid) ->
     et:trace_me(80, test_read_frames,pcap_file,read,[]),
     F1=read(Pid),
     test_read_frames(F1,Pid).
