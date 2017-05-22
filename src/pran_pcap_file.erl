@@ -64,11 +64,19 @@ close(Fd) ->
 %%                         {stop, Reason}
 %% Description: Initiates the server
 %%--------------------------------------------------------------------
-init([File,Opts]) ->
+init([File, Type, Opts]) ->
     Decoders = proplists:get_value(decoders, Opts),
     Filters =  proplists:get_value(filters, Opts, []),
-    {ok, Fd} = file:open(File, [read, raw, binary]),
-    {ok, Bin} = file:pread(Fd, 0, ?BLOCKSIZE),
+    {Fd, Bin} = case Type of
+        disk ->
+            {ok, F} = file:open(File, [read, raw, binary]),
+            {ok, B} = file:pread(F, 0, ?BLOCKSIZE),
+            {F, B};
+        memory ->
+            {ok, F} = file:open(File, [ram, read, binary]),
+            {ok, B} = file:pread(F, 0, ?BLOCKSIZE),
+            {F, B}
+    end,
     case pran_pcap:file_header(Bin) of
 	{#file_hdr{order = Endian,
 		   major = _Major, minor = _Minor,
