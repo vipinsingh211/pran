@@ -13,7 +13,7 @@ the packets in the file.
 
 Examples
 --------
-
+```erlang
 48> {ok,FD}=pran:open_file("mtp2.pcap", "").
 {ok,<0.152.0>}
 49> pran:read(FD).                          
@@ -37,7 +37,7 @@ Examples
          1,17,19,...>>}]
 51> pran:close(FD).                         
 ok
-
+```
 Protocols
 ---------
 
